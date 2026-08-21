@@ -15,8 +15,14 @@
             "import": "./dist/index.js"
         },
         "./worker": "./dist/worker.js",
-        "./vite": "./dist/vite.js",
-        "./build": "./dist/build.js"
+        "./vite": {
+            "types": "./dist/vite.d.ts",
+            "import": "./dist/vite.js"
+        },
+        "./build": {
+            "types": "./dist/build.d.ts",
+            "import": "./dist/build.js"
+        }
     },
     "scripts": {
         "build": "tsc -p tsconfig.json",
@@ -25,7 +31,7 @@
         "wasm:build": "node src/build.js build",
         "wasm:prepare": "node src/build.js prepare",
         "prepare": "npm run build",
-        "postbuild": "node -e \"const fs=require('fs'); fs.mkdirSync('dist',{recursive:true}); fs.cpSync('src/vite.js','dist/vite.js'); fs.cpSync('src/build.js','dist/build.js');\"",
+        "postbuild": "node -e \"const fs=require('fs'); fs.mkdirSync('dist',{recursive:true}); fs.cpSync('src/vite.js','dist/vite.js'); fs.cpSync('src/build.js','dist/build.js'); try{ fs.cpSync('src/vite.d.ts','dist/vite.d.ts') }catch(e){} try{ fs.cpSync('src/build.d.ts','dist/build.d.ts') }catch(e){}\"",
         "prepublishOnly": "npm run prepare"
     },
     "devDependencies": {
