@@ -1,0 +1,62 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+.pnpm-debug.log
+
+# Build outputs
+dist/
+build/
+coverage/
+.cache/
+*.tgz
+
+# Vite cache
+node_modules/.vite/
+
+# Editor directories
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+
+# Rust/build artifacts for wasm crates
+/target/
+**/target/
+/pkg/
+**/pkg/
+*.wasm
+
+# Misc
+*.bak
+*.swp
+*.tmp
+
+# npm publish artifacts
+.npm/
+
+# Lockfiles for pnpm
+.pnpm-debug.log
+
+# Optional: local test artifacts
+.threads/
+
+# GitHub Actions
+.github/workflows/*-local.yml
