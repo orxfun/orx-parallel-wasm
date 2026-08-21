@@ -4,7 +4,8 @@
     "type": "module",
     "files": [
         "dist",
-        "src"
+        "src",
+        "pkg"
     ],
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
@@ -14,8 +15,8 @@
             "import": "./dist/index.js"
         },
         "./worker": "./dist/worker.js",
-        "./vite": "./src/vite.js",
-        "./build": "./src/build.js"
+        "./vite": "./dist/vite.js",
+        "./build": "./dist/build.js"
     },
     "scripts": {
         "build": "tsc -p tsconfig.json",
@@ -24,6 +25,7 @@
         "wasm:build": "node src/build.js build",
         "wasm:prepare": "node src/build.js prepare",
         "prepare": "npm run build",
+        "postbuild": "node -e \"const fs=require('fs'); fs.mkdirSync('dist',{recursive:true}); fs.cpSync('src/vite.js','dist/vite.js'); fs.cpSync('src/build.js','dist/build.js');\"",
         "prepublishOnly": "npm run prepare"
     },
     "devDependencies": {
