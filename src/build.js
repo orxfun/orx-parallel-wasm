@@ -15,15 +15,31 @@ const DEFAULT_RUSTFLAGS = [
 ].join(" ");
 
 /**
+ * Normalize and validate thread configuration.
+ * Accepts number or numeric string, requires non-negative integer.
+ *
+ * @param {number | string | undefined} value
+ * @returns {number}
+ */
+export function normalizeThreads(value) {
+    const normalized = value === undefined ? 0 : Number(value);
+    if (!Number.isInteger(normalized) || normalized < 0) {
+        throw new Error("threads must be a non-negative integer");
+    }
+    return normalized;
+}
+
+/**
  * Prepare a wasm package directory for consumption by the plugin.
  * - Reads `package.json` (or uses `bindingsFile`) to determine the JS entry
- * - Copies worker helper sources and writes `orx-parallel-web.json` manifest
+ * - Copies worker helper sources and writes `orx-parallel-wasm.json` manifest
  *
- * @param {{outDir: string, bindingsFile?: string}} options
- * @returns {{bindingsUrl: string, workerHelpers: string[]}} manifest
+ * @param {{outDir: string, bindingsFile?: string, threads?: number | string}} options
+ * @returns {{bindingsUrl: string, workerHelpers: string[], threads: number}} manifest
  */
-export async function prepareWasm({ outDir, bindingsFile }) {
+export async function prepareWasm({ outDir, bindingsFile, threads }) {
     const outputDir = resolve(outDir);
+    const normalizedThreads = normalizeThreads(threads);
     const entry = bindingsFile ?? await readFile(join(outputDir, "package.json"), "utf8")
         .then(text => JSON.parse(text).main)
         .catch(() => undefined)
@@ -42,9 +58,10 @@ export async function prepareWasm({ outDir, bindingsFile }) {
 
     const manifest = {
         bindingsUrl: `./${entry}`,
-        workerHelpers: workerSources.map((source) => relative(outputDir, join(dirname(source), "worker_helpers.js")))
+        workerHelpers: workerSources.map((source) => relative(outputDir, join(dirname(source), "worker_helpers.js"))),
+        threads: normalizedThreads
     };
-    await writeFile(join(outputDir, "orx-parallel-web.json"), `${JSON.stringify(manifest, null, 2)}\n`);
+    await writeFile(join(outputDir, "orx-parallel-wasm.json"), `${JSON.stringify(manifest, null, 2)}\n`);
     return manifest;
 }
 
@@ -52,13 +69,14 @@ export async function prepareWasm({ outDir, bindingsFile }) {
  * Build a Rust crate with `wasm-pack` (web target) into `outDir` and then
  * prepare the produced package with `prepareWasm()`.
  *
- * @param {{bindings: string, outDir: string, bindingsFile?: string, wasmPack?: string, rustupToolchain?: string, rustflags?: string}} options
+ * @param {{bindings: string, outDir: string, bindingsFile?: string, threads?: number | string, wasmPack?: string, rustupToolchain?: string, rustflags?: string}} options
  * @returns {Promise<ReturnType<typeof prepareWasm>>}
  */
 export async function buildWasm({
     bindings,
     outDir,
     bindingsFile,
+    threads,
     wasmPack = "wasm-pack",
     rustupToolchain = "nightly",
     rustflags = DEFAULT_RUSTFLAGS
@@ -90,7 +108,7 @@ export async function buildWasm({
         }
     });
 
-    return prepareWasm({ outDir: outputDir, bindingsFile });
+    return prepareWasm({ outDir: outputDir, bindingsFile, threads });
 }
 
 /**

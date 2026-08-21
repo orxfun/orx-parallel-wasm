@@ -4,8 +4,8 @@
     "type": "module",
     "files": [
         "dist",
-        "src",
-        "pkg"
+        "LICENSE-MIT",
+        "LICENSE-APACHE"
     ],
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
@@ -25,6 +25,7 @@
         }
     },
     "scripts": {
+        "prebuild": "node -e \"const fs=require('fs'); fs.rmSync('dist',{recursive:true,force:true});\"",
         "build": "tsc -p tsconfig.json",
         "typecheck": "tsc -p tsconfig.json --noEmit",
         "test": "npm run build && node --test test/client.test.mjs test/build.test.mjs test/vite.test.mjs",
@@ -32,13 +33,13 @@
         "wasm:prepare": "node src/build.js prepare",
         "prepare": "npm run build",
         "postbuild": "node -e \"const fs=require('fs'); fs.mkdirSync('dist',{recursive:true}); fs.cpSync('src/vite.js','dist/vite.js'); fs.cpSync('src/build.js','dist/build.js'); try{ fs.cpSync('src/vite.d.ts','dist/vite.d.ts') }catch(e){} try{ fs.cpSync('src/build.d.ts','dist/build.d.ts') }catch(e){}\"",
-        "prepublishOnly": "npm run prepare"
+        "prepublishOnly": "npm test"
     },
     "devDependencies": {
         "typescript": "^5.8.3"
     },
     "description": "Build and integrate orx-parallel Rust->WASM bindings with Vite and worker runtimes.",
-    "license": "MIT",
+    "license": "(MIT OR Apache-2.0)",
     "repository": {
         "type": "git",
         "url": "https://github.com/orxfun/orx-parallel-wasm.git"

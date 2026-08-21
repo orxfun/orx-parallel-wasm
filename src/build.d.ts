@@ -2,9 +2,23 @@
 
 export interface BuildOptions {
     bindings: string | string[];
-    outDir?: string;
+    outDir: string;
     bindingsFile?: string;
+    threads?: number | string;
 }
 
-export function buildWasm(opts: BuildOptions): Promise<void>;
-export function prepareWasm(opts: { outDir?: string; bindingsFile?: string } ): Promise<void>;
+export interface PrepareOptions {
+    outDir: string;
+    bindingsFile?: string;
+    threads?: number | string;
+}
+
+export interface WasmPreparationManifest {
+    bindingsUrl: string;
+    workerHelpers: string[];
+    threads: number;
+}
+
+export function normalizeThreads(value?: number | string): number;
+export function buildWasm(opts: BuildOptions): Promise<WasmPreparationManifest>;
+export function prepareWasm(opts: PrepareOptions): Promise<WasmPreparationManifest>;
