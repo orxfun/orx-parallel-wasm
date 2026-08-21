@@ -1,6 +1,6 @@
 {
-    "name": "orx-parallel-web",
-    "private": true,
+    "name": "orx-parallel-wasm",
+    "version": "1.0.0",
     "type": "module",
     "files": [
         "dist",
@@ -23,9 +23,16 @@
         "test": "npm run build && node --test test/client.test.mjs test/build.test.mjs test/vite.test.mjs",
         "wasm:build": "node src/build.js build",
         "wasm:prepare": "node src/build.js prepare",
-        "prepare": "npm run build"
+        "prepare": "npm run build",
+        "prepublishOnly": "npm run prepare"
     },
     "devDependencies": {
         "typescript": "^5.8.3"
+    },
+    "description": "Build and integrate orx-parallel Rust->WASM bindings with Vite and worker runtimes.",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/orxfun/orx-parallel-wasm.git"
     }
 }
