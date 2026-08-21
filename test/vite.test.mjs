@@ -6,8 +6,9 @@ test("Vite plugin allows the app and local package roots", () => {
     const plugin = orxParallelWasm({ threads: 16, bindings: "../wasm_bindings" });
     const config = plugin.config({ root: "/example/app" });
 
+    assert.deepEqual(config.optimizeDeps.exclude, ["orx-parallel-wasm"]);
     assert.equal(config.server.fs.allow[0], "/example/app");
-    assert.match(config.server.fs.allow[1], /wasm-web\/?$/);
+    assert.match(config.server.fs.allow[1], /orx-parallel-wasm\/?$/);
     // no compile-time define is injected
     assert.ok(config.server.fs.allow.length >= 2);
 });

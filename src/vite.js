@@ -41,6 +41,9 @@ export function orxParallelWasm(options) {
         name: "orx-parallel-wasm",
         config(config) {
             return {
+                optimizeDeps: {
+                    exclude: ["orx-parallel-wasm"]
+                },
                 server: {
                     fs: {
                         allow: [config.root ?? process.cwd(), packageRoot]
