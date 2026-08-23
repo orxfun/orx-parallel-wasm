@@ -19,15 +19,15 @@ function initialize(request: Extract<WorkerRequest, { type: "init" }>): Promise<
         if (typeof imported.default !== "function") {
             throw new Error("wasm bindings must export a default initializer");
         }
-        if (typeof imported.init_parallel_runtime !== "function") {
-            throw new Error("wasm bindings must export init_parallel_runtime");
+        if (typeof imported.init_wasm_parallel_runtime !== "function") {
+            throw new Error("wasm bindings must export init_wasm_parallel_runtime");
         }
 
         const threads = request.threads === 0
             ? Math.max(1, self.navigator?.hardwareConcurrency ?? 1)
             : request.threads;
         await imported.default();
-        await imported.init_parallel_runtime(threads);
+        await imported.init_wasm_parallel_runtime(threads);
         bindings = imported;
         allowedMethods = new Set(request.methods);
         initializedThreads = threads;

@@ -19,6 +19,6 @@ export type WorkerResponse =
 
 export type WasmBindings = {
     default: (options?: unknown) => Promise<unknown>;
-    init_parallel_runtime: (threads: number) => Promise<unknown>;
+    init_wasm_parallel_runtime: (threads: number) => Promise<unknown>;
     [method: string]: unknown;
 };

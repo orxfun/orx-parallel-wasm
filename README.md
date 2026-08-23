@@ -23,7 +23,7 @@ worker.terminate();
 ```
 
 The worker imports the bindings module, awaits its generated default wasm
-initializer, awaits `init_parallel_runtime(threads)`, and then dispatches only
+initializer, awaits `init_wasm_parallel_runtime(threads)`, and then dispatches only
 the methods listed in `methods`. Calls on one client are serialized.
 
 ## Build preparation
