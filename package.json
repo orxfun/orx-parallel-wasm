@@ -27,6 +27,10 @@
             "types": "./dist/webpack.d.ts",
             "import": "./dist/webpack.js"
         },
+        "./rollup": {
+            "types": "./dist/rollup.d.ts",
+            "import": "./dist/rollup.js"
+        },
         "./build": {
             "types": "./dist/build.d.ts",
             "import": "./dist/build.js"
@@ -36,11 +40,11 @@
         "prebuild": "node -e \"const fs=require('fs'); fs.rmSync('dist',{recursive:true,force:true});\"",
         "build": "tsc -p tsconfig.json",
         "typecheck": "tsc -p tsconfig.json --noEmit",
-        "test": "npm run build && node --test test/client.test.mjs test/build.test.mjs test/vite.test.mjs test/webpack.test.mjs",
+        "test": "npm run build && node --test test/client.test.mjs test/build.test.mjs test/vite.test.mjs test/webpack.test.mjs test/rollup.test.mjs",
         "wasm:build": "node src/build.js build",
         "wasm:prepare": "node src/build.js prepare",
         "prepare": "npm run build",
-        "postbuild": "node -e \"const fs=require('fs'); fs.mkdirSync('dist',{recursive:true}); fs.cpSync('src/vite.js','dist/vite.js'); fs.cpSync('src/build.js','dist/build.js'); fs.cpSync('src/prepare.js','dist/prepare.js'); fs.cpSync('src/webpack.js','dist/webpack.js'); try{ fs.cpSync('src/vite.d.ts','dist/vite.d.ts') }catch(e){} try{ fs.cpSync('src/build.d.ts','dist/build.d.ts') }catch(e){} try{ fs.cpSync('src/prepare.d.ts','dist/prepare.d.ts') }catch(e){} try{ fs.cpSync('src/webpack.d.ts','dist/webpack.d.ts') }catch(e){}\"",
+        "postbuild": "node -e \"const fs=require('fs'); fs.mkdirSync('dist',{recursive:true}); fs.cpSync('src/vite.js','dist/vite.js'); fs.cpSync('src/build.js','dist/build.js'); fs.cpSync('src/prepare.js','dist/prepare.js'); fs.cpSync('src/webpack.js','dist/webpack.js'); fs.cpSync('src/rollup.js','dist/rollup.js'); try{ fs.cpSync('src/vite.d.ts','dist/vite.d.ts') }catch(e){} try{ fs.cpSync('src/build.d.ts','dist/build.d.ts') }catch(e){} try{ fs.cpSync('src/prepare.d.ts','dist/prepare.d.ts') }catch(e){} try{ fs.cpSync('src/webpack.d.ts','dist/webpack.d.ts') }catch(e){} try{ fs.cpSync('src/rollup.d.ts','dist/rollup.d.ts') }catch(e){}\"",
         "prepublishOnly": "npm test"
     },
     "devDependencies": {
