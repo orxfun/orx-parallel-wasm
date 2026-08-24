@@ -19,5 +19,6 @@ export interface PreparedCrate {
 }
 
 export function emitCrate(pluginContext: unknown, crate: PreparedCrate, isPrimary: boolean): Promise<void>;
+export function emitRuntimeWorker(pluginContext: unknown, bundle: unknown): Promise<void>;
 export function orxParallelWasm(options: OrxParallelWasmOptions): RollupPluginLike;
 export default orxParallelWasm;

@@ -4,11 +4,25 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { emitCrate } from "../src/rollup.js";
+// dist is used here because the runtime worker is a built sibling of rollup.js
+import { emitRuntimeWorker } from "../dist/rollup.js";
 
 function fakePluginContext() {
     const assets = new Map();
     return { assets, emitFile: ({ fileName, source }) => assets.set(fileName, source) };
 }
+
+test("Rollup plugin emits the runtime worker next to each entry chunk", async () => {
+    const context = fakePluginContext();
+    await emitRuntimeWorker(context, {
+        "assets/main.js": { type: "chunk", isEntry: true, fileName: "assets/main.js" },
+        "assets/vendor.js": { type: "chunk", isEntry: false, fileName: "assets/vendor.js" },
+        "index.html": { type: "asset", fileName: "index.html" }
+    });
+
+    assert.deepEqual([...context.assets.keys()], ["assets/worker.js"]);
+    assert.match(context.assets.get("assets/worker.js"), /init_wasm_parallel_runtime/);
+});
 
 test("Rollup plugin rewrites the wasm-pack placeholder import and emits assets", async () => {
     const root = await mkdtemp(join(tmpdir(), "orx-parallel-wasm-rollup-"));

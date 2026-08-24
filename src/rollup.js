@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { basename as pathBasename, relative, resolve as pathResolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { buildWasm } from "./build.js";
 import { listFiles } from "./prepare.js";
 
@@ -64,14 +65,36 @@ export function orxParallelWasm(options) {
         async buildStart() {
             await ensureBuilt();
         },
-        async generateBundle() {
+        async generateBundle(_outputOptions, bundle) {
             await ensureBuilt();
             for (const crate of crates) {
                 await emitCrate(this, crate, crates[0] === crate);
             }
+            await emitRuntimeWorker(this, bundle);
             this.emitFile({ type: "asset", fileName: "_headers", source: HEADERS_FILE });
         }
     };
+}
+
+/**
+ * Emit the client's runtime worker next to every entry chunk.
+ *
+ * Rollup, unlike Vite/webpack/Rspack, does not turn `new URL("./worker.js",
+ * import.meta.url)` into an emitted asset, so the reference would otherwise 404.
+ */
+export async function emitRuntimeWorker(pluginContext, bundle) {
+    const source = await readFile(fileURLToPath(new URL("./worker.js", import.meta.url)), "utf8");
+    const directories = new Set();
+
+    for (const output of Object.values(bundle ?? {})) {
+        if (output.type !== "chunk" || !output.isEntry) continue;
+        const separator = output.fileName.lastIndexOf("/");
+        directories.add(separator === -1 ? "" : output.fileName.slice(0, separator + 1));
+    }
+
+    for (const directory of directories) {
+        pluginContext.emitFile({ type: "asset", fileName: `${directory}worker.js`, source });
+    }
 }
 
 export async function emitCrate(pluginContext, crate, isPrimary) {
