@@ -36,6 +36,7 @@ export function orxParallelWasm(options) {
     }
     const pkgDirs = [];
     const crateNames = [];
+    const crateRuntimeEntries = Object.create(null);
 
     return {
         name: "orx-parallel-wasm",
@@ -146,6 +147,12 @@ export function orxParallelWasm(options) {
                 } else {
                     crateEntryMap[crate] = undefined;
                 }
+
+                if (candidate) {
+                    const runtimeEntry = `${crate}.generated.js`;
+                    await cp(pathResolve(pd, candidate), pathResolve(destAssets, runtimeEntry), { force: true });
+                    crateRuntimeEntries[crate] = runtimeEntry;
+                }
             }
 
             // Primary pkgMain is the entry for the first crate or a fallback JS in assets
@@ -153,6 +160,7 @@ export function orxParallelWasm(options) {
             const pkgMain = (primaryCrate && crateEntryMap[primaryCrate])
                 || assetFiles.find(n => n.endsWith('.js'))
                 || 'index.js';
+            const primaryRuntimeEntry = (primaryCrate && crateRuntimeEntries[primaryCrate]) || pkgMain;
 
             async function visit(dir) {
                 const entries = await fs.readdir(dir, { withFileTypes: true });
@@ -190,7 +198,7 @@ export function orxParallelWasm(options) {
 
             // Ensure there's a stable assets/index.js shim that forwards to the pkgMain
             const shimPath = pathResolve(destAssets, 'index.js');
-            const shimContent = `import './${pkgMain}';\nexport * from './${pkgMain}';\n`;
+            const shimContent = `import './${primaryRuntimeEntry}';\nexport * from './${primaryRuntimeEntry}';\nexport { default } from './${primaryRuntimeEntry}';\n`;
             await writeFile(shimPath, shimContent, 'utf8');
 
             // Duplicate common worker files to stable filenames (worker, worker_helpers)
@@ -212,23 +220,14 @@ export function orxParallelWasm(options) {
             // Create explicit shims for each built crate named by its basename
             for (let i = 0; i < crateNames.length; i++) {
                 const crate = crateNames[i];
-                const candidate = crateEntryMap[crate] || assetFiles.find(n => n.endsWith('.js')) || pkgMain;
+                const candidate = crateRuntimeEntries[crate] || crateEntryMap[crate] || assetFiles.find(n => n.endsWith('.js')) || pkgMain;
                 if (candidate) {
                     const shimName = `${crate}.js`;
                     const shimPath = pathResolve(destAssets, shimName);
-                    const shimContent = `import './${candidate}';\nexport * from './${candidate}';\n`;
+                    const shimContent = `import './${candidate}';\nexport * from './${candidate}';\nexport { default } from './${candidate}';\n`;
                     await writeFile(shimPath, shimContent, 'utf8');
                 }
             }
-            // ensure a compatibility shim `wasm_bindings.js` pointing at first crate's entry
-            if (crateNames.length > 0) {
-                const first = crateNames[0];
-                const candidate = crateEntryMap[first] || pkgMain || 'index.js';
-                const wasmShimPath = pathResolve(destAssets, 'wasm_bindings.js');
-                const wasmShimContent = `import './${candidate}';\nexport * from './${candidate}';\n`;
-                await writeFile(wasmShimPath, wasmShimContent, 'utf8');
-            }
-
             // Create wrapper modules for wasm-imported JS namespaces like `*_bg.wasm`
             const wasmFiles = assetFiles.filter(n => /_?bg[-_]?.*\.wasm$/.test(n));
             for (const wasmName of wasmFiles) {
