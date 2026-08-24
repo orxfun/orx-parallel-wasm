@@ -41,6 +41,9 @@ export async function prepareWasm({ outDir, bindingsFile, threads }) {
 
     for (const source of workerSources) {
         const destination = join(dirname(source), "worker_helpers.js");
+        const content = await readFile(source, "utf8");
+        const preparedContent = content.replace("await pkg.default(init);", "await pkg.default({ memory: init.memory });");
+        await writeFile(source, preparedContent, "utf8");
         await cp(source, destination);
     }
 

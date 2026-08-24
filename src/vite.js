@@ -183,6 +183,7 @@ export function orxParallelWasm(options) {
                         content = content.split('import("../../../../..")').join(fileReplacement);
                         content = content.split("import('../../../../..')").join(fileReplacement);
                         content = content.replace(/import\(\s*['\"]?\.\.\/\.\.\/\.\.\.\s*['\"]?\s*\)/g, fileReplacement);
+                        content = content.replace("await pkg.default(init);", "await pkg.default({ memory: init.memory });");
                         await writeFile(p, content, 'utf8');
                     }
                 }
@@ -195,6 +196,18 @@ export function orxParallelWasm(options) {
                 throw new Error(`Expected snippets directory at ${snippetsRoot} but none found`);
             }
             await visit(snippetsRoot);
+
+            // Remove wrappers from older plugin versions. wasm-bindgen's generated
+            // JS already supplies the import object for its `_bg.wasm` module.
+            for (const wasmName of assetFiles.filter(n => /_?bg[-_]?.*\.wasm$/.test(n))) {
+                const wrapperName = wasmName.replace(/(-[A-Za-z0-9_]+)?\.wasm$/, '').replace(/-bg$/, '_bg') + '.js';
+                const sourceWrapperExists = await Promise.all(pkgDirs.map(async (pkgDir) =>
+                    (await fs.stat(pathResolve(pkgDir, wrapperName)).catch(() => null))?.isFile() ?? false
+                )).then(results => results.some(Boolean));
+                if (!sourceWrapperExists) {
+                    await fs.rm(pathResolve(destAssets, wrapperName), { force: true });
+                }
+            }
 
             // Ensure there's a stable assets/index.js shim that forwards to the pkgMain
             const shimPath = pathResolve(destAssets, 'index.js');
@@ -226,20 +239,6 @@ export function orxParallelWasm(options) {
                     const shimPath = pathResolve(destAssets, shimName);
                     const shimContent = `import './${candidate}';\nexport * from './${candidate}';\nexport { default } from './${candidate}';\n`;
                     await writeFile(shimPath, shimContent, 'utf8');
-                }
-            }
-            // Create wrapper modules for wasm-imported JS namespaces like `*_bg.wasm`
-            const wasmFiles = assetFiles.filter(n => /_?bg[-_]?.*\.wasm$/.test(n));
-            for (const wasmName of wasmFiles) {
-                const base = wasmName.replace(/(-[A-Za-z0-9_]+)?\.wasm$/, '').replace(/-bg$/, '_bg');
-                const jsCandidate = assetFiles.find(n => n.includes(base.replace('_bg', '')) && n.endsWith('.js'))
-                    || assetFiles.find(n => n.startsWith(base.replace('_bg', '')) && n.endsWith('.js'))
-                    || assetFiles.find(n => n.endsWith('.js'));
-                if (jsCandidate) {
-                    const wrapperName = `${base}.js`;
-                    const wrapperPath = pathResolve(destAssets, wrapperName);
-                    const wrapperContent = `export * from './${jsCandidate}';\nexport { default } from './${jsCandidate}';\n`;
-                    await writeFile(wrapperPath, wrapperContent, 'utf8');
                 }
             }
         },

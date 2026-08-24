@@ -112,6 +112,7 @@ export async function emitCrate(pluginContext, crate, isPrimary) {
             for (const placeholder of PLACEHOLDER_IMPORTS) {
                 text = text.split(placeholder).join(replacement);
             }
+            text = text.replace("await pkg.default(init);", "await pkg.default({ memory: init.memory });");
             content = text;
         }
         pluginContext.emitFile({ type: "asset", fileName: `assets/${relPath}`, source: content });

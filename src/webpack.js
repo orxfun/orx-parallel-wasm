@@ -109,6 +109,7 @@ export class OrxParallelWasmPlugin {
                 for (const placeholder of PLACEHOLDER_IMPORTS) {
                     text = text.split(placeholder).join(replacement);
                 }
+                text = text.replace("await pkg.default(init);", "await pkg.default({ memory: init.memory });");
                 content = text;
             }
             compilation.emitAsset(`assets/${relPath}`, new RawSource(content));
