@@ -1,6 +1,9 @@
 import { execFileSync } from "node:child_process";
-import { cp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
-import { dirname, join, relative, resolve, basename as pathBasename } from "node:path";
+import { mkdir, rm } from "node:fs/promises";
+import { resolve, basename as pathBasename } from "node:path";
+import { normalizeThreads, prepareWasm } from "./prepare.js";
+
+export { normalizeThreads, prepareWasm } from "./prepare.js";
 
 const DEFAULT_RUSTFLAGS = [
     "-C target-feature=+atomics",
@@ -13,57 +16,6 @@ const DEFAULT_RUSTFLAGS = [
     "-C link-arg=--export=__tls_align",
     "-C link-arg=--export=__tls_base"
 ].join(" ");
-
-/**
- * Normalize and validate thread configuration.
- * Accepts number or numeric string, requires non-negative integer.
- *
- * @param {number | string | undefined} value
- * @returns {number}
- */
-export function normalizeThreads(value) {
-    const normalized = value === undefined ? 0 : Number(value);
-    if (!Number.isInteger(normalized) || normalized < 0) {
-        throw new Error("threads must be a non-negative integer");
-    }
-    return normalized;
-}
-
-/**
- * Prepare a wasm package directory for consumption by the plugin.
- * - Reads `package.json` (or uses `bindingsFile`) to determine the JS entry
- * - Copies worker helper sources and writes `orx-parallel-wasm.json` manifest
- *
- * @param {{outDir: string, bindingsFile?: string, threads?: number | string}} options
- * @returns {{bindingsUrl: string, workerHelpers: string[], threads: number}} manifest
- */
-export async function prepareWasm({ outDir, bindingsFile, threads }) {
-    const outputDir = resolve(outDir);
-    const normalizedThreads = normalizeThreads(threads);
-    const entry = bindingsFile ?? await readFile(join(outputDir, "package.json"), "utf8")
-        .then(text => JSON.parse(text).main)
-        .catch(() => undefined)
-        ?? "wasm_bindings.js";
-    const snippetRoot = join(outputDir, "snippets");
-    const workerSources = await findFiles(snippetRoot, "wasm_web_start_workers.js");
-
-    if (workerSources.length === 0) {
-        throw new Error(`no wasm_web_start_workers.js found under ${snippetRoot}`);
-    }
-
-    for (const source of workerSources) {
-        const destination = join(dirname(source), "worker_helpers.js");
-        await cp(source, destination);
-    }
-
-    const manifest = {
-        bindingsUrl: `./${entry}`,
-        workerHelpers: workerSources.map((source) => relative(outputDir, join(dirname(source), "worker_helpers.js"))),
-        threads: normalizedThreads
-    };
-    await writeFile(join(outputDir, "orx-parallel-wasm.json"), `${JSON.stringify(manifest, null, 2)}\n`);
-    return manifest;
-}
 
 /**
  * Build a Rust crate with `wasm-pack` (web target) into `outDir` and then
@@ -109,35 +61,6 @@ export async function buildWasm({
     });
 
     return prepareWasm({ outDir: outputDir, bindingsFile, threads });
-}
-
-/**
- * Recursively find files with the given `filename` under `directory`.
- * Returns an array of absolute paths to matching files.
- *
- * @param {string} directory
- * @param {string} filename
- * @returns {Promise<string[]>}
- */
-async function findFiles(directory, filename) {
-    const matches = [];
-    let entries;
-    try {
-        entries = await readdir(directory, { withFileTypes: true });
-    } catch (error) {
-        if (error.code === "ENOENT") return matches;
-        throw error;
-    }
-
-    for (const entry of entries) {
-        const path = join(directory, entry.name);
-        if (entry.isDirectory()) {
-            matches.push(...await findFiles(path, filename));
-        } else if (entry.isFile() && entry.name === filename) {
-            matches.push(path);
-        }
-    }
-    return matches;
 }
 
 /**

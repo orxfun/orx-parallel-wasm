@@ -14,6 +14,10 @@
             "types": "./dist/index.d.ts",
             "import": "./dist/index.js"
         },
+        "./prepare": {
+            "types": "./dist/prepare.d.ts",
+            "import": "./dist/prepare.js"
+        },
         "./worker": "./dist/worker.js",
         "./vite": {
             "types": "./dist/vite.d.ts",
@@ -32,7 +36,7 @@
         "wasm:build": "node src/build.js build",
         "wasm:prepare": "node src/build.js prepare",
         "prepare": "npm run build",
-        "postbuild": "node -e \"const fs=require('fs'); fs.mkdirSync('dist',{recursive:true}); fs.cpSync('src/vite.js','dist/vite.js'); fs.cpSync('src/build.js','dist/build.js'); try{ fs.cpSync('src/vite.d.ts','dist/vite.d.ts') }catch(e){} try{ fs.cpSync('src/build.d.ts','dist/build.d.ts') }catch(e){}\"",
+        "postbuild": "node -e \"const fs=require('fs'); fs.mkdirSync('dist',{recursive:true}); fs.cpSync('src/vite.js','dist/vite.js'); fs.cpSync('src/build.js','dist/build.js'); fs.cpSync('src/prepare.js','dist/prepare.js'); try{ fs.cpSync('src/vite.d.ts','dist/vite.d.ts') }catch(e){} try{ fs.cpSync('src/build.d.ts','dist/build.d.ts') }catch(e){} try{ fs.cpSync('src/prepare.d.ts','dist/prepare.d.ts') }catch(e){}\"",
         "prepublishOnly": "npm test"
     },
     "devDependencies": {

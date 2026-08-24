@@ -28,6 +28,9 @@ the methods listed in `methods`. Calls on one client are serialized.
 
 ## Build preparation
 
+The preparation API is bundler-neutral. It can be used from a Webpack,
+Rollup, or other build script independently of the Vite integration.
+
 `prepare` processes an existing `wasm-pack` output directory:
 
 ```bash
@@ -47,6 +50,12 @@ adjacent `worker_helpers.js` paths and write `orx-parallel-wasm.json`. The
 build-time thread limit comes from the `threads` option of the Vite plugin (or
 of `buildWasm`/`prepareWasm`); `0`, the default, leaves browser
 hardware-concurrency selection to the client.
+
+Use `prepareWasm` when the Rust package has already been built, or
+`buildWasm` when the build should invoke `wasm-pack`. The resulting directory
+can then be emitted as static assets by the bundler of your choice.
+
+The preparation-only API is also available from `orx-parallel-wasm/prepare`.
 
 The Vite integration is available from `orx-parallel-wasm/vite` and adds the
 cross-origin isolation headers required by `SharedArrayBuffer`.

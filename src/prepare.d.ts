@@ -1,12 +1,5 @@
 /** Bundler-neutral helpers */
 
-export interface BuildOptions {
-    bindings: string | string[];
-    outDir: string;
-    bindingsFile?: string;
-    threads?: number | string;
-}
-
 export interface PrepareOptions {
     outDir: string;
     bindingsFile?: string;
@@ -20,5 +13,4 @@ export interface WasmPreparationManifest {
 }
 
 export function normalizeThreads(value?: number | string): number;
-export function buildWasm(opts: BuildOptions): Promise<WasmPreparationManifest>;
 export function prepareWasm(opts: PrepareOptions): Promise<WasmPreparationManifest>;
