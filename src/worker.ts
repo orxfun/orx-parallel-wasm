@@ -15,7 +15,8 @@ function initialize(request: Extract<WorkerRequest, { type: "init" }>): Promise<
     if (initialization !== undefined) return initialization;
 
     initialization = (async () => {
-        const imported = (await import(request.bindingsUrl)) as WasmBindings;
+        // The application supplies this URL at runtime; Webpack must not try to bundle it.
+        const imported = (await import(/* webpackIgnore: true */ request.bindingsUrl)) as WasmBindings;
         if (typeof imported.default !== "function") {
             throw new Error("wasm bindings must export a default initializer");
         }
