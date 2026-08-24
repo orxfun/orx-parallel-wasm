@@ -96,6 +96,7 @@ export class OrxParallelWasmPlugin {
     async emitCrate(compilation, RawSource, crate) {
         const { outDir, manifest, crateName } = crate;
         const entryFile = manifest.bindingsUrl.replace(/^\.\//, "");
+        const runtimeEntry = `${crateName}.generated.js`;
         const isPrimary = this.crates[0] === crate;
 
         for (const file of await listFiles(outDir)) {
@@ -103,7 +104,7 @@ export class OrxParallelWasmPlugin {
             const depth = relPath.split("/").length - 1;
             let content = await readFile(file);
             if (relPath.startsWith("snippets/") && file.endsWith(".js")) {
-                const replacement = `import("${"../".repeat(depth)}${entryFile}")`;
+                const replacement = `import("${"../".repeat(depth)}${runtimeEntry}")`;
                 let text = content.toString("utf8");
                 for (const placeholder of PLACEHOLDER_IMPORTS) {
                     text = text.split(placeholder).join(replacement);
@@ -113,11 +114,14 @@ export class OrxParallelWasmPlugin {
             compilation.emitAsset(`assets/${relPath}`, new RawSource(content));
         }
 
-        const shim = `export * from './${entryFile}';\nexport { default } from './${entryFile}';\n`;
+        const entryContent = await readFile(pathResolve(outDir, entryFile));
+        compilation.emitAsset(`assets/${runtimeEntry}`, new RawSource(entryContent));
+
+        const shim = `export * from './${runtimeEntry}';\nexport { default } from './${runtimeEntry}';\n`;
         if (`${crateName}.js` !== entryFile) {
             compilation.emitAsset(`assets/${crateName}.js`, new RawSource(shim));
         }
-        if (isPrimary && "bindings.js" !== entryFile) {
+        if (isPrimary) {
             compilation.emitAsset("assets/bindings.js", new RawSource(shim));
         }
     }

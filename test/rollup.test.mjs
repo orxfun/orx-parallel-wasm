@@ -29,6 +29,7 @@ test("Rollup plugin rewrites the wasm-pack placeholder import and emits assets",
     const outDir = join(root, "pkg");
     const snippetDir = join(outDir, "snippets", "orx-parallel-abc", "src", "pool", "pool_impl");
     await mkdir(snippetDir, { recursive: true });
+    await writeFile(join(outDir, "wasm_bindings.js"), "export default async () => {};\n");
     await writeFile(join(snippetDir, "wasm_web_start_workers.js"), `const pkg = await import("../../../../..");`);
 
     const crate = {
@@ -41,11 +42,12 @@ test("Rollup plugin rewrites the wasm-pack placeholder import and emits assets",
     await emitCrate(context, crate, true);
 
     assert.ok(context.assets.has("assets/bindings.js"));
-    assert.match(context.assets.get("assets/bindings.js"), /wasm_bindings\.js/);
+    assert.match(context.assets.get("assets/bindings.js"), /wasm_bindings\.generated\.js/);
+    assert.ok(context.assets.has("assets/wasm_bindings.generated.js"));
 
     const snippetOut = context.assets.get("assets/snippets/orx-parallel-abc/src/pool/pool_impl/wasm_web_start_workers.js");
     assert.ok(snippetOut, "snippet asset should be emitted");
-    assert.match(snippetOut.toString(), /import\("\.\.\/\.\.\/\.\.\/\.\.\/\.\.\/wasm_bindings\.js"\)/);
+    assert.match(snippetOut.toString(), /import\("\.\.\/\.\.\/\.\.\/\.\.\/\.\.\/wasm_bindings\.generated\.js"\)/);
 });
 
 test("Rollup plugin skips the crate-name shim when it collides with the real entry file", async () => {
@@ -66,5 +68,7 @@ test("Rollup plugin skips the crate-name shim when it collides with the real ent
     assert.ok(context.assets.has("assets/wasm_bindings.js"));
     assert.ok(context.assets.has("assets/bindings.js"));
     assert.equal(context.assets.get("assets/wasm_bindings.js").toString(), "export default async () => {};\n");
+    assert.match(context.assets.get("assets/bindings.js").toString(), /wasm_bindings\.generated\.js/);
+    assert.equal(context.assets.get("assets/wasm_bindings.generated.js").toString(), "export default async () => {};\n");
 });
 

@@ -77,10 +77,11 @@ test("Webpack plugin rewrites the wasm-pack placeholder import and emits assets"
     assert.ok(assets.has("_headers"));
     assert.match(assets.get("_headers"), /Cross-Origin-Embedder-Policy: require-corp/);
     assert.ok(assets.has("assets/bindings.js"));
-    assert.match(assets.get("assets/bindings.js"), /wasm_bindings\.js/);
+    assert.match(assets.get("assets/bindings.js"), /wasm_bindings\.generated\.js/);
+    assert.ok(assets.has("assets/wasm_bindings.generated.js"));
 
     const snippetOut = assets.get("assets/snippets/orx-parallel-abc/src/pool/pool_impl/wasm_web_start_workers.js");
     assert.ok(snippetOut, "snippet asset should be emitted");
-    assert.match(snippetOut.toString(), /import\("\.\.\/\.\.\/\.\.\/\.\.\/\.\.\/wasm_bindings\.js"\)/);
+    assert.match(snippetOut.toString(), /import\("\.\.\/\.\.\/\.\.\/\.\.\/\.\.\/wasm_bindings\.generated\.js"\)/);
     assert.doesNotMatch(snippetOut.toString(), /import\("\.\.\/\.\.\/\.\.\/\.\.\/\.\.$/m);
 });

@@ -100,13 +100,14 @@ export async function emitRuntimeWorker(pluginContext, bundle) {
 export async function emitCrate(pluginContext, crate, isPrimary) {
     const { outDir, manifest, crateName } = crate;
     const entryFile = manifest.bindingsUrl.replace(/^\.\//, "");
+    const runtimeEntry = `${crateName}.generated.js`;
 
     for (const file of await listFiles(outDir)) {
         const relPath = relative(outDir, file).replaceAll("\\", "/");
         const depth = relPath.split("/").length - 1;
         let content = await readFile(file);
         if (relPath.startsWith("snippets/") && file.endsWith(".js")) {
-            const replacement = `import("${"../".repeat(depth)}${entryFile}")`;
+            const replacement = `import("${"../".repeat(depth)}${runtimeEntry}")`;
             let text = content.toString("utf8");
             for (const placeholder of PLACEHOLDER_IMPORTS) {
                 text = text.split(placeholder).join(replacement);
@@ -116,11 +117,14 @@ export async function emitCrate(pluginContext, crate, isPrimary) {
         pluginContext.emitFile({ type: "asset", fileName: `assets/${relPath}`, source: content });
     }
 
-    const shim = `export * from './${entryFile}';\nexport { default } from './${entryFile}';\n`;
+    const entryContent = await readFile(pathResolve(outDir, entryFile));
+    pluginContext.emitFile({ type: "asset", fileName: `assets/${runtimeEntry}`, source: entryContent });
+
+    const shim = `export * from './${runtimeEntry}';\nexport { default } from './${runtimeEntry}';\n`;
     if (`${crateName}.js` !== entryFile) {
         pluginContext.emitFile({ type: "asset", fileName: `assets/${crateName}.js`, source: shim });
     }
-    if (isPrimary && "bindings.js" !== entryFile) {
+    if (isPrimary) {
         pluginContext.emitFile({ type: "asset", fileName: "assets/bindings.js", source: shim });
     }
 }
