@@ -85,3 +85,31 @@ async function findFiles(directory, filename) {
     }
     return matches;
 }
+
+/**
+ * Recursively list every file under a directory, as absolute paths.
+ * Used by bundler adapters to copy or transform a prepared package.
+ *
+ * @param {string} directory
+ * @returns {Promise<string[]>}
+ */
+export async function listFiles(directory) {
+    const matches = [];
+    let entries;
+    try {
+        entries = await readdir(directory, { withFileTypes: true });
+    } catch (error) {
+        if (error.code === "ENOENT") return matches;
+        throw error;
+    }
+
+    for (const entry of entries) {
+        const path = join(directory, entry.name);
+        if (entry.isDirectory()) {
+            matches.push(...await listFiles(path));
+        } else if (entry.isFile()) {
+            matches.push(path);
+        }
+    }
+    return matches;
+}
