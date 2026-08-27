@@ -58,6 +58,22 @@
     "license": "(MIT OR Apache-2.0)",
     "repository": {
         "type": "git",
-        "url": "https://github.com/orxfun/orx-parallel-wasm.git"
-    }
+        "url": "git+https://github.com/orxfun/orx-parallel-wasm.git"
+    },
+    "directories": {
+        "test": "test"
+    },
+    "keywords": [
+        "parallel",
+        "computation",
+        "performance",
+        "thread",
+        "iterator",
+        "concurrency"
+    ],
+    "author": "orxfun (Ugur Arikan)",
+    "bugs": {
+        "url": "https://github.com/orxfun/orx-parallel-wasm/issues"
+    },
+    "homepage": "https://github.com/orxfun/orx-parallel-wasm#readme"
 }
