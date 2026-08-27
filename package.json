@@ -1,7 +1,6 @@
 {
     "name": "orx-parallel-wasm",
     "version": "1.0.0",
-    "type": "module",
     "files": [
         "dist",
         "LICENSE-MIT",
