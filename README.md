@@ -4,9 +4,7 @@ This package provides a typed browser worker client for wasm bindings built
 with `wasm-pack` and the web-thread backend of `orx-parallel`.
 
 It is used by the browser examples in the
-[`orx-parallel`](https://github.com/orxfun/orx-parallel) repository. The package
-is not published to npm yet, so the examples currently install it directly from
-GitHub.
+[`orx-parallel`](https://github.com/orxfun/orx-parallel) repository.
 
 ## Examples and tutorial
 
